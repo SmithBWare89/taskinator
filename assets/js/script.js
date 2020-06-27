@@ -43,6 +43,7 @@ var createTaskEl = function(taskDataObj) {
 
   // Add task ID as a custom attribute
   listItemEl.setAttribute("data-task-id", taskIdCounter);
+  listItemEl.setAttribute("draggable", "true");
 
   // Creating a div below the li with class task-info
   var taskInfoEl = document.createElement("div");
@@ -181,6 +182,53 @@ var taskStatusChangeHandler = function(event) {
     }
 }
 
+var dragTaskHandler = function(event) {
+  // Grab the task ID of the item we're dragging
+  var taskId = event.target.getAttribute("data-task-id");
+  // Stores the taskID in the dataTransfer property of the event
+  event.dataTransfer.setData("text/plain", taskId);
+  // Verifies that we've gotten the data from dataTransfer
+  var getId = event.dataTransfer.getData("text/plain");
+} 
+
+var dropZoneDragHandler = function() {
+  var taskListEl = event.target.closest(".task-list");
+  if (taskListEl) {
+    event.preventDefault();
+    taskListEl.setAttribute("style", "background: rgba(68, 233, 255, 0.7); border-style: dashed;");
+  }
+}
+
+var dropTaskHandler = function() {
+  var id = event.dataTransfer.getData("text/plain");
+  var draggableElement = document.querySelector("[data-task-id='" + id + "']"); 
+  var dropZoneEl = event.target.closest(".task-list");
+  var statusType = dropZoneEl.id;
+  var statusSelectEl = draggableElement.querySelector("select[name='status-change']");
+  if (statusType === "tasks-to-do") {
+    // Changes the selected index to display in dropdown menu
+    statusSelectEl.selectedIndex = 0;
+  } 
+  else if (statusType === "tasks-in-progress") {
+    statusSelectEl.selectedIndex = 1;
+  } 
+  else if (statusType === "tasks-completed") {
+    statusSelectEl.selectedIndex = 2;
+  }
+  dropZoneEl.appendChild(draggableElement);
+  dropZoneEl.removeAttribute("style");
+}
+
+var dragLeaveHandler = function() {
+  var taskListEl = event.target.closest(".task-list");
+  if (taskListEl) {
+    taskListEl.removeAttribute("style");
+}
+
 pageContentEl.addEventListener("click", taskButtonHandler);
 formEl.addEventListener("submit", taskFormHandler);
 pageContentEl.addEventListener("change", taskStatusChangeHandler);
+pageContentEl.addEventListener("dragstart", dragTaskHandler);
+pageContentEl.addEventListener("dragover", dropZoneDragHandler);
+pageContentEl.addEventListener("drop", dropTaskHandler);
+pageContentEl.addEventListener("dragleave", dragLeaveHandler);
